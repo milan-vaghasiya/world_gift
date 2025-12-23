@@ -7,6 +7,7 @@
                     <tr>
                         <th>#</th>
                         <th>Item Name</th>
+                        <th>Item Code</th>
                         <th>Category</th>
                         <th>M.R.P.</th>
                         <th>Stock</th>

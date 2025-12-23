@@ -701,7 +701,6 @@ function AddRow(data) {
 	cell.append(formEnteryTypeInput);
 	cell.append(refIdInput);
 	cell.append(itemTypeInput);
-	cell.append(itemCodeInput);
 	cell.append(itemDescInput);
 	cell.append(gstPerInput);
 	cell.append(locationIdInput);
@@ -709,6 +708,11 @@ function AddRow(data) {
 	cell.append(batchNoInput);
 	cell.append(stockEffInput);
 	cell.append(bacthErrorDiv);
+
+	var itemCodeInput = $("<input/>",{type:"hidden",name:"item_code[]",value:data.item_code});
+	cell = $(row.insertCell(-1));
+	cell.html(data.item_code);
+	cell.append(itemCodeInput);
 
 	var hsnCodeInput = $("<input/>",{type:"hidden",name:"hsn_code[]",value:data.hsn_code});
 	cell = $(row.insertCell(-1));

@@ -661,6 +661,7 @@ class Products extends MY_Controller
             $sendData[] = [
                 "",
                 $item_name,
+                $row->item_code,
                 $row->category_name,
                 $row->price,
                 $row->qty
@@ -693,8 +694,13 @@ class Products extends MY_Controller
     }
     
     public function getCategoryList(){
+        $postData = $this->input->post();
         $categoryData = $this->item->getCategoryList();
-        $options='<option value="">All Category</option>';
+
+        $options = '';
+        if(empty($postData['skip_all_category'])){
+            $options='<option value="">All Category</option>';
+        }
 		foreach($categoryData as $row):
 			$options.= '<option value="'.$row->id.'">'.$row->category_name.'</option>';
 		endforeach;
@@ -1013,6 +1019,94 @@ class Products extends MY_Controller
             }
         }
         $this->printJson(['status' => 1, 'message' => $row . ' Record updated successfully.']);
+    }
+
+    //Download Excell Format In Item Code
+    public function createItemCodeExcel($category_id=0){
+        $paramData = $this->item->getItemForCatalogue($category_id,'excel');
+        $table_column = array('id', 'item_name', 'item_code', 'category_name');
+        $spreadsheet = new Spreadsheet();
+        $inspSheet = $spreadsheet->getActiveSheet();
+        $inspSheet = $inspSheet->setTitle('Item Code');
+        $xlCol = 'A';
+        $rows = 1;
+        foreach ($table_column as $tCols) {
+            $inspSheet->setCellValue($xlCol . $rows, $tCols);
+            $xlCol++; 
+        }
+        foreach (['A', 'B', 'C', 'D'] as $col) {
+            $inspSheet->getColumnDimension($col)->setAutoSize(true);
+        }
+        $rows = 2;
+        foreach ($paramData as $row) {
+            $inspSheet->setCellValue('A' . $rows, $row->id);
+            $inspSheet->setCellValue('B' . $rows, $row->item_name);
+            $inspSheet->setCellValue('C' . $rows, $row->item_code);
+            $inspSheet->setCellValue('D' . $rows, $row->category_name);
+            $rows++;
+        }
+
+        $fileDirectory = realpath(APPPATH . '../assets/uploads/finish_goods');
+        $fileName = '/item_code_' . time() . '.xlsx';
+        $writer = new Xlsx($spreadsheet);
+
+        $writer->save($fileDirectory . $fileName);
+        header("Content-Type: application/vnd.ms-excel"); 
+        redirect(base_url('assets/uploads/finish_goods') . $fileName);
+    } 
+
+
+    public function importCodeExcel(){
+        if(empty($_FILES['item_code_excel']['name'])){
+            $errorMessage['item_code_excel'] = "File is required.";
+            $this->printJson(['status' => 0, 'message' => $errorMessage]); 
+        }
+        $fileData = $this->importExcelFile($_FILES['item_code_excel'], 'product', 'Item Code');
+
+        $row = 0;
+        if (!empty($fileData)) {
+            $fieldArray = $fileData[0][1];
+
+            //Validate format in excel
+            $expectedColumns = ['id','item_name','item_code','category_name'];
+            if (array_values($fieldArray) !== $expectedColumns) {
+                $this->printJson(['status'  => 2, 'message' => 'Excel Format is not valid.']);
+            }
+
+            for ($i = 2; $i <= count($fileData[0]); $i++) {                
+                $rowData = array();
+                $c = 'A';
+                
+                foreach ($fileData[0][$i] as $key => $colData){
+                    $rowData[strtolower($fieldArray[$c])] = $colData;
+                    $c++;
+                }
+                
+                if(!empty($rowData['id']) && !empty($rowData['item_name']) && !empty($rowData['item_code'])){
+                    $rData = [
+                        'id' => $rowData['id'],
+                        'item_type' => 1,
+                        'item_name' => $rowData['item_name'],
+                        'item_code' => $rowData['item_code']
+                    ];
+                    $result = $this->item->save($rData);
+                    
+                    if($result['status'] == 0 || $result['status'] == 2)
+                    {
+                        $this->printJson(['status' => 2, 'message' => $result['message'] ]);
+                    }
+                    else
+                    {
+                        $row++;
+                    }
+                }
+            }
+        }
+        if($row > 0){
+            $this->printJson(['status' => 1, 'message' => $row . ' Record updated successfully.']);
+        } else{
+            $this->printJson(['status' => 2, 'message' => 'Record not updated.']);  
+        }
     }
 }
 ?>

@@ -1197,6 +1197,7 @@ class ItemModel extends MasterModel{
 		
 		$data['searchCol'][] ="";
 		$data['searchCol'][] = "item_master.item_name";
+		$data['searchCol'][] = "item_master.item_code";
 		$data['searchCol'][] = "item_category.category_name";
 		$data['searchCol'][] ="";
 

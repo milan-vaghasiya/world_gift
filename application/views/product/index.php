@@ -8,6 +8,7 @@
                             <div class="row">
                             <div class="col-md-3">
 						        <a href="javascript:void(0)" class="btn btn-outline-primary productSheet"><i class="fas fa-file-excel"></i> Without Image</a>
+                                <a href="javascript:void(0)" class="btn btn-outline-primary itemCodeSheet"><i class="fas fa-file-excel"></i> Update Item Code</a>
 							</div>
                             <div class="col-md-6">
                                 <input type="file" name="item_excel" id="item_excel" class="form-control-file float-left col-md-3" />
@@ -110,6 +111,60 @@
         </div>
     </div>
 </div>
+
+<!-- Item Code Model -->
+<div class="modal fade" id="itemCodeSheetModel" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content animated zoomIn border-light">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title text-dark"><i class="fa fa-file-excel"></i> &nbsp;&nbsp; Item Code Sheet</h5>
+                <button type="button" class="close text-dark" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="itemCodeSheetForm" method="post" action="<?= base_url($headData->controller . '/createItemCodeExcel/') ?>" target="_blank">
+                <div class="modal-body">
+                    <div class="col-md-12">
+                        <div class="row">
+                            <div class="col-sm-6 form-group">
+                                <label>Category</label>
+                                <select name="item_category_id_excel" id="item_category_id_excel" class="form-control single-select req">
+                                    <input type="hidden" name="printsid" id="printsid" value="0">
+                                </select>
+                            </div>
+                            <div class="col-sm-6 form-group">
+                                <label>Download</label><br>
+                                <a href="javascript:void(0);" class="btn btn-labeled btn-info bg-info-dark mr-2 createItemCodeExcel" target="_blank"><i class="fa fa-download"></i>&nbsp;&nbsp;<span class="btn-label">Download Excel&nbsp;&nbsp;<i class="fa fa-file-excel"></i></span></a>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+
+                    <div class="col-md-12 mb-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label>Upload Excel</label>
+                                <input type="file" name="item_code_excel" id="item_code_excel" class="form-control req">  
+                                <label class="error error_msg"></label>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label>&nbsp;</label><br>
+                                <a href="javascript:void(0);" class="btn btn-labeled btn-success bg-success-dark importCodeExcel" type="button">
+                                    <i class="fa fa-upload"></i>&nbsp;
+                                    <span class="btn-label">Upload Excel &nbsp;<i class="fa fa-file-excel"></i></span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <?php $this->load->view('includes/footer'); ?>
 <script src="<?php echo base_url();?>assets/js/custom/product.js?v=<?=time()?>"></script>
 <script src="<?php echo base_url();?>assets/js/custom/item-stock-update.js?v=<?=time()?>"></script>
@@ -217,6 +272,73 @@ $(document).ready(function(){
             }
             $(this).removeAttr("disabled");
             $("#item_excel").val(null);
+        });
+    });
+
+    //Item Code excel
+    $('body').on('click', '.createItemCodeExcel', function() {
+        var category_id = $('#item_category_id_excel').val();
+        window.location.href = base_url + controller + '/createItemCodeExcel/'+ $('#item_category_id_excel').val();
+    });
+
+    $(document).on("click",".itemCodeSheet",function(){
+        $.ajax({
+            url:base_url+'products/getCategoryList',
+            type:'post',
+            data:{'skip_all_category':1},
+            dataType:'json',
+            success:function(data){
+                $("#item_category_id_excel").html(data.options);
+                $("#item_category_id_excel").comboSelect();
+            }
+        });
+        $("#itemCodeSheetModel").modal();
+    });
+
+    $('body').on('click', '.importCodeExcel', function() {
+        $(".error_msg").html("");
+        $(this).attr("disabled", "disabled");
+        var fd = new FormData();
+        fd.append("item_code_excel", $("#item_code_excel")[0].files[0]);
+        $.ajax({
+            url: base_url + controller + '/importCodeExcel',
+            data: fd,
+            type: "POST",
+            processData: false,
+            contentType: false,
+            dataType: "json",
+        }).done(function(data) {
+            if (data.status === 0) {
+                $(".error_msg").html("");
+                var error='';
+                $.each(data.message, function(key, value) {
+                    error+=' '+value;
+                });
+                $(".error_msg").html(error);
+            } else if (data.status == 1) {
+                toastr.success(data.message, 'Success', {
+                    "showMethod": "slideDown",
+                    "hideMethod": "slideUp",
+                    "closeButton": true,
+                    positionClass: 'toastr toast-bottom-center',
+                    containerId: 'toast-bottom-center',
+                    "progressBar": true
+                });
+                initTable();
+            }
+            else if (data.status == 2) {
+                toastr.warning(data.message, 'Warning', {
+                    "showMethod": "slideDown",
+                    "hideMethod": "slideUp",
+                    "closeButton": true,
+                    positionClass: 'toastr toast-bottom-center',
+                    containerId: 'toast-bottom-center',
+                    "progressBar": true
+                });
+                initTable();
+            }
+            $(this).removeAttr("disabled");
+            $("#item_code_excel").val(null);
         });
     });
 });

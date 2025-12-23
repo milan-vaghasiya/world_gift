@@ -279,6 +279,7 @@
 												<tr>
 													<th style="width:5%;">#</th>
 													<th>Item Name</th>
+													<th>Item Code</th>
 													<th>HSN Code</th>
 													<th>Qty.</th>
 													<th>Unit</th>
@@ -319,8 +320,12 @@
 																<input type="hidden" name="batch_no[]" value="<?= $row->batch_no ?>">
 																<input type="hidden" name="batch_qty[]" value="<?= $row->batch_qty ?>">
 
-																<input type="hidden" name="item_type[]" value="<?= $row->item_type ?>" /><input type="hidden" name="item_code[]" value="<?= $row->item_code ?>" /><input type="hidden" name="item_desc[]" value="<?= $row->item_desc ?>" /><input type="hidden" name="gst_per[]" value="<?= $row->gst_per ?>" />
+																<input type="hidden" name="item_type[]" value="<?= $row->item_type ?>" /><input type="hidden" name="item_desc[]" value="<?= $row->item_desc ?>" /><input type="hidden" name="gst_per[]" value="<?= $row->gst_per ?>" />
 																<div class="error batch_no<?= $i ?>"></div>
+															</td>
+															<td>
+																<?= $row->item_code ?>
+																<input type="hidden" name="item_code[]" value="<?= $row->item_code ?>" />
 															</td>
 															<td>
 																<?= $row->hsn_code ?>
@@ -403,9 +408,9 @@
 											</tbody>
 											<tfoot class="table-info">
 												<tr>
-													<th colspan="3">Total Qty.</th>
+													<th colspan="4">Total Qty.</th>
 													<th><span class="totalQty"><?=$totalQty?></span></th>
-													<th colspan="8"></th>
+													<th colspan="7"></th>
 												</tr>
 											</tfoot>
 										</table>

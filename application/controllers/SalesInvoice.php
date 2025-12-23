@@ -1180,6 +1180,7 @@ class SalesInvoice extends MY_Controller{
 					<thead><tr class="text-center">
 						<th style="width:6%;">Sr.No.</th>
 						<th class="text-left">Description of Goods</th>
+						<th style="width:10%;">Item Code</th>
 						<th style="width:10%;">HSN/SAC</th>
 						<th style="width:10%;">Qty</th>
 						<th style="width:10%;">Rate</th>
@@ -1263,6 +1264,7 @@ class SalesInvoice extends MY_Controller{
 					$pageItems.='<tr>';
 						$pageItems.='<td class="text-center" height="26">'.$i.'</td>';
 						$pageItems.='<td class="text-left">'.$row->item_name.'</td>';
+						$pageItems.='<td class="text-center">'.$row->item_code.'</td>';
 						$pageItems.='<td class="text-center">'.$row->hsn_code.'</td>';
 						$pageItems.='<td class="text-center">'.sprintf('%0.2f', $row->qty).' ('.$row->unit_name.')</td>';
 						$pageItems.='<td class="text-right">'.sprintf('%0.2f', $row->price).'</td>';
@@ -1367,14 +1369,14 @@ class SalesInvoice extends MY_Controller{
 		}*/
 		
 		$itemList.='<tr>';
-			$itemList.='<td colspan="3" class="text-right" style="vartical-align:top;border-top:1px solid #000;border-right:1px solid #000;"><b>Total Qty</b></td>';
+			$itemList.='<td colspan="4" class="text-right" style="vartical-align:top;border-top:1px solid #000;border-right:1px solid #000;"><b>Total Qty</b></td>';
 			$itemList.='<th class="text-right" style="border:1px solid #000;border-left:0px solid #000;">'.sprintf('%0.2f', $total_qty).'</th>';
 			$itemList.='<th colspan="2" class="text-right" style="border:1px solid #000;border-left:0px solid #000;">Sub Total</th>';
 			$itemList.='<th class="text-right" style="border:1px solid #000;border-left:0px solid #000;">'.sprintf('%0.2f', $salesData->total_amount).'</th>';
 		$itemList.='</tr>';
 		
 		$itemList.='<tr>';
-			$itemList.='<td colspan="4" rowspan="'.($rwspan+($rowCount-1)).'" class="text-left" style="vartical-align:top;border-top:1px solid #000;border-right:1px solid #000;"><b>Bank Name : </b>'.$companyData->company_bank_name.'<br>
+			$itemList.='<td colspan="5" rowspan="'.($rwspan+($rowCount-1)).'" class="text-left" style="vartical-align:top;border-top:1px solid #000;border-right:1px solid #020202ff;"><b>Bank Name : </b>'.$companyData->company_bank_name.'<br>
     			<b>A/c. No. : </b>'.$companyData->company_acc_no.'<br>
     			<b>IFSC Code : </b>'.$companyData->company_ifsc_code.'
     			</td>';
@@ -1389,7 +1391,7 @@ class SalesInvoice extends MY_Controller{
 		$itemList.=$gstRow.$afterExp;
 		
 		$itemList.='<tr>';
-			$itemList.='<td colspan="4" rowspan="2" class="text-left" style="vartical-align:top;border:1px solid #000;border-left:0px;">
+			$itemList.='<td colspan="5" rowspan="2" class="text-left" style="vartical-align:top;border:1px solid #000;border-left:0px;">
 				<i><b>Total GST : </b>'.numToWordEnglish($gstAmount).'</i><br>
 				<i><b>Bill Amount : </b>'.numToWordEnglish($salesData->net_amount).'</i><br>
 				
