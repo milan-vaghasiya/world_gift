@@ -1,0 +1,65 @@
+<?php
+class ProductReport extends MY_Controller
+{
+    private $item_report_page = "report/item/index";
+    private $item_wise_stock = "report/item/item_stock";
+    private $product_list = "report/item/product_list";
+    public function __construct(){
+		parent::__construct();
+		$this->isLoggedin();
+		$this->data['headData']->pageTitle = "Product Report";
+		$this->data['headData']->controller = "reports/productReport";
+		$this->data['floatingMenu'] = $this->load->view('report/item/floating_menu',[],true);
+	}
+	
+	public function index(){
+		$this->data['pageHeader'] = 'ITEM/PRODUCT REPORT';
+        $this->load->view($this->item_report_page,$this->data);
+    }
+
+    /* Item Ledger */    
+    public function productList(){
+        $this->data['pageHeader'] = 'Product Listing';
+		$this->data['categoryList'] = $this->item->getCategoryList('1');
+        $this->load->view($this->product_list,$this->data);
+    }
+
+    public function getProductList()
+	{
+		$data = $this->input->post();
+        $itemData = $this->item->getItemList(1,$data['category_id']);
+        $tbody="";$i=1;
+        if(!empty($itemData))
+        {
+            foreach($itemData as $row)
+            {
+                $tbody .='<tr>';
+                    $tbody .='<td>'.$i++.'</td>';
+                    $tbody .='<td>'.$row->item_name.'</td>';
+                    $tbody .='<td>'.$row->category_name.'</td>';
+                    $tbody .='<td>'.$row->hsn_code.'</td>';
+                    $tbody .='<td>'.floatVal($row->gst_per).'</td>';
+                    $tbody .='<td>'.$row->unit_name.'</td>';
+                $tbody .='</tr>';
+            }
+        }
+        $this->printJson(['status'=>1,'tbody'=>$tbody]);
+    }
+
+    /* Item Ledger */    
+    public function itemWiseStock($item_id=""){
+        $this->data['pageHeader'] = 'ITEM/PRODUCT STOCK REGISTER';
+		$this->data['fgData'] = $this->item->getItemList(1);
+		$this->data['rmData'] = $this->item->getItemList(0);
+		$this->data['itemId'] = $item_id;
+        $this->load->view($this->item_wise_stock,$this->data);
+    }
+
+    public function getItemWiseStock()
+	{
+		$data = $this->input->post();
+        $result = $this->productReporModel->getItemWiseStock($data);
+        $this->printJson($result);
+    }
+}
+?>

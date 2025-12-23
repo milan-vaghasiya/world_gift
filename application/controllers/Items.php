@@ -1,0 +1,189 @@
+<?php
+class Items extends MY_Controller
+{
+    private $indexPage = "item/index";
+    private $itemForm = "item/form";
+    private $itemStockUpdateForm = "item/stock_update";
+    private $itemOpeningStockForm = "item/opening_update";
+    private $gstPercentage = Array(["rate"=>0,"val"=>'NIL'],["rate"=>0.25,"val"=>'0.25%'],["rate"=>3,"val"=>'3%'],["rate"=>5,"val"=>'5%'],["rate"=>12,"val"=>'12%'],["rate"=>18,"val"=>'18%'],["rate"=>28,"val"=>'28%']);
+	public function __construct(){
+		parent::__construct();
+		$this->isLoggedin();
+		$this->data['headData']->pageTitle = "Items";
+		$this->data['headData']->controller = "items";
+	}
+	
+	public function index(){
+        $this->data['headData']->pageUrl = "items/pitems";
+        $this->data['item_type'] = 3;
+        $this->data['tableHeader'] = getDtHeader($this->data['headData']->controller);
+        $this->load->view($this->indexPage,$this->data);
+    }
+	
+	public function pitems(){
+        $this->data['headData']->pageUrl = "items/pitems";
+        $this->data['item_type'] = 3;
+        $this->data['tableHeader'] = getPurchaseDtHeader($this->data['headData']->controller);
+        $this->load->view($this->indexPage,$this->data);
+    }
+
+    public function consumable(){
+        $this->data['headData']->pageUrl = "items/consumable";
+        $this->data['item_type'] = 2;
+        $this->data['tableHeader'] = getStoreDtHeader($this->data['headData']->controller);
+        $this->load->view($this->indexPage,$this->data);
+    }
+
+    public function getDTRows($item_type){  
+
+        $result = $this->item->getDTRows($this->input->post(),$item_type);
+        $sendData = array();$i=1;
+        foreach($result['data'] as $row):
+            $row->sr_no = $i++;
+            $itmStock = $this->store->getItemStock($row->id);
+            $row->qty = 0;
+            if(!empty($itmStock->qty)){$row->qty = $itmStock->qty;}
+            $sendData[] = getItemData($row);
+        endforeach;
+        $result['data'] = $sendData;
+        $this->printJson($result);
+    }
+
+    /* Updated at : 09-12-2021 [Milan chauhan] */
+    public function addItem($item_type){
+        $this->data['item_type'] = $item_type;
+        $this->data['unitData'] = $this->item->itemUnits();
+        $this->data['gstPercentage'] = $this->gstPercentage;
+        $this->data['categoryList'] = $this->item->getCategoryList($item_type);
+        //$this->data['familyGroup'] = $this->item->getfamilyGroupList();
+        //$this->data['materialGrade'] = $this->materialGrade->getMaterialGrades();
+        $this->load->view($this->itemForm,$this->data);
+    }
+    
+    public function save(){
+        $data = $this->input->post();
+        $errorMessage = array();
+	
+		if(empty($data['item_name']))
+			$errorMessage['item_name'] = "Item Name is required.";
+        if(empty($data['unit_id']))
+            $errorMessage['unit_id'] = "Unit is required.";
+        if(empty($data['category_id']))
+            $errorMessage['category_id'] = "Category is required.";
+
+        if(!empty($errorMessage)):
+            $this->printJson(['status'=>0,'message'=>'Some fields are required.','field_error'=>1,'field_error_message'=>$errorMessage]);
+        else:
+            $data['created_by'] = $this->session->userdata('loginId');
+            $this->printJson($this->item->save($data));
+        endif;
+    }
+
+    /* Updated at : 09-12-2021 [Milan chauhan] */
+    public function edit(){
+        $id = $this->input->post('id');
+        $this->data['unitData'] = $this->item->itemUnits();
+        $this->data['gstPercentage'] = $this->gstPercentage;
+        $this->data['dataRow'] = $this->item->getItem($id);
+        $this->data['categoryList'] = $this->item->getCategoryList($this->data['dataRow']->item_type);
+        // $this->data['familyGroup'] = $this->item->getfamilyGroupList();
+        // $this->data['materialGrade'] = $this->materialGrade->getMaterialGrades();
+        $this->load->view($this->itemForm,$this->data);
+    }
+
+    public function delete(){
+        $id = $this->input->post('id');
+        if(empty($id)):
+            $this->printJson(['status'=>0,'message'=>'Somthing went wrong...Please try again.','field_error'=>0,'field_error_message'=>NULL]);
+        else:
+            $this->printJson($this->item->delete($id));
+        endif;
+    }
+
+    public function addStockTrans(){
+        $id = $this->input->post('id');
+        $this->data['stockTransData'] = $this->item->getStockTrans($id);
+        $this->load->view($this->itemStockUpdateForm,$this->data);
+    }
+
+    public function saveStockTrans(){
+        $data = $this->input->post();
+        if(empty($data['trans_date']))
+            $errorMessage['trans_date'] = "Date is required.";
+        if(empty($data['qty']))
+            $errorMessage['qty'] = "Quantity is required.";
+        
+        if(!empty($errorMessage)):
+            $this->printJson(['status'=>0,'message'=>'Some fields are required.','field_error'=>1,'field_error_message'=>$errorMessage]);
+        else:
+		    $this->printJson(["status"=>1,"stockData"=>$this->item->saveStockTrans($data)]);
+        endif;
+	}
+
+    public function deleteStockTrans(){
+		$id = $this->input->post('id');
+		$this->printJson($this->item->deleteStockTrans($id));
+	}
+	
+	public function addOpeningStock(){
+        $id = $this->input->post('id');
+        $this->data['openingStockData'] = $this->item->getItemOpeningTrans($id);
+        $this->data['locationData'] = $this->store->getStoreLocationList();
+        $this->load->view($this->itemOpeningStockForm,$this->data);
+    }
+
+    public function saveOpeningStock(){
+        $data = $this->input->post();
+        $errorMessage = array();
+
+        if(empty($data['location_id']))
+            $errorMessage['location_id'] = "Store Location is required.";
+        if(empty($data['qty']))
+            $errorMessage['qty'] = "Qty. is required.";
+
+        if(!empty($errorMessage)):
+            $this->printJson(['status'=>0,'message'=>'Some fields are required.','field_error'=>1,'field_error_message'=>$errorMessage]);
+        else:
+            $data['ref_date'] = $this->startYearDate;
+            $data['created_by'] = $this->session->userdata('loginId');
+            //print_r($data);exit;
+            $this->printJson($this->item->saveOpeningStock($data));
+        endif;
+    }
+
+    public function deleteOpeningStockTrans(){
+        $id = $this->input->post('id');
+        if(empty($id)):
+            $this->printJson(['status'=>0,'message'=>'Somthing went wrong...Please try again.','field_error'=>0,'field_error_message'=>NULL]);
+        else:
+            $this->printJson($this->item->deleteOpeningStockTrans($id));
+        endif;
+    }
+    
+    public function getItemData(){
+		$id = $this->input->post('itemId');
+        $result = $this->item->getItem($id);
+        $unitData = $this->item->itemUnit($result->unit_id);
+        $result->unit_name = $unitData->unit_name;
+        $result->description = $unitData->description;
+		$this->printJson($result);
+	}
+
+    public function getCategoryList(){
+        $categoryList = $this->item->getCategoryList(1);
+        $options='';//'<option value="">All Category</option>'; 
+        $main_name='';
+        foreach($categoryList as $row):
+            
+            if($row->main_name != $main_name){ $options.= '<optgroup label="'.$row->main_name.'">'; }
+                $options.= '<option value="'.$row->id.'">'.$row->category_name.'</option>'; 
+                $main_name = $row->main_name;
+            if($row->main_name != $main_name){ $options.= '</optgroup>';}
+            
+            
+        endforeach; 
+       // print_r($options); exit;
+        $this->printJson(['status'=>1,'options'=>$options]);
+    }
+}
+?>
