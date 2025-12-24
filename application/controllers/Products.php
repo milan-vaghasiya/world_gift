@@ -1062,7 +1062,7 @@ class Products extends MY_Controller
             $this->printJson(['status' => 0, 'message' => $errorMessage]); 
         }
         $fileData = $this->importExcelFile($_FILES['item_code_excel'], 'product', 'Item Code');
-
+        
         $row = 0;
         if (!empty($fileData)) {
             $fieldArray = $fileData[0][1];
@@ -1087,7 +1087,8 @@ class Products extends MY_Controller
                         'id' => $rowData['id'],
                         'item_type' => 1,
                         'item_name' => $rowData['item_name'],
-                        'item_code' => $rowData['item_code']
+                        'item_code' => $rowData['item_code'],
+                        'is_update_item_code' => true,
                     ];
                     $result = $this->item->save($rData);
                     

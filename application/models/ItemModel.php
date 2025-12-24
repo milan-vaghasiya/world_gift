@@ -192,7 +192,7 @@ class ItemModel extends MasterModel{
 			$process = array(); $itmId = 0;
 			$msg = ($data['item_type'] == 0) ? "Item" : "Part";
 			
-			if($this->checkDuplicate($data['item_name'],$data['item_type'],$data['id']) > 0):
+			if(empty($data['is_update_item_code']) && $this->checkDuplicate($data['item_name'],$data['item_type'],$data['id']) > 0):
 				$errorMessage['item_name'] =  $msg." Name is duplicate.";
 				
 				if(!isset($data['source'])):
@@ -204,7 +204,7 @@ class ItemModel extends MasterModel{
 				if(!empty($data['process_id'])):
 					$process = explode(',',$data['process_id']);
 				endif;
-				unset($data['process_id'],$data['source']);
+				unset($data['process_id'],$data['source'],$data['is_update_item_code']);
 				
 				$mgsName = ($data['item_type'] == 0)?"Item":"Product";
 				$result = $this->store($this->itemMaster,$data,$mgsName);
